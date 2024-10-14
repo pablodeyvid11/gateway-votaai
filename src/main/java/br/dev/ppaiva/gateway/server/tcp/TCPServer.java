@@ -1,11 +1,8 @@
 package br.dev.ppaiva.gateway.server.tcp;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
 import org.apache.logging.log4j.LogManager;
@@ -32,19 +29,16 @@ public class TCPServer extends Server {
 			while (true) {
 
 				try {
-					Socket nextClient = server.accept();
-					InputStreamReader isr = new InputStreamReader(nextClient.getInputStream(), StandardCharsets.UTF_8);
-					BufferedReader reader = new BufferedReader(isr);
-					String data = reader.readLine();
-					
+					Socket socket = server.accept();
+
 					String requestName = String.format("%d%d", System.currentTimeMillis(), random.nextLong(1000, 9999));
 
-					Runnable tcpMsgHandler = new TCPMessageHandler(requestName, data, nextClient);
+					Runnable tcpMsgHandler = new TCPMessageHandler(requestName, socket);
 					executorHandle.execute(tcpMsgHandler);
 
 					logger.info(String.format("RECEIVED REQUEST #%s", requestName));
 					logger.info(String.format("REQUEST #%s FROM %s:%d scheduled", requestName,
-							nextClient.getInetAddress().toString(), nextClient.getPort()));
+							socket.getInetAddress().toString(), socket.getPort()));
 
 				} catch (IOException e) {
 					logger.error(e);

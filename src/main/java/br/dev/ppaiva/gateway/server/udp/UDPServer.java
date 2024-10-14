@@ -21,16 +21,17 @@ public class UDPServer extends Server {
 	@Override
 	public void startServer() {
 		logger.info("UDP SERVER STARTED ON PORT " + port);
-		try (DatagramSocket socket = new DatagramSocket(port)){
+		try (DatagramSocket socket = new DatagramSocket(port)) {
 			Random random = new Random(System.currentTimeMillis());
 			while (true) {
-				byte[] receivedMessage = new byte[1024];
+				
+				byte[] receivedMessage = new byte[2048];
 				DatagramPacket receivedPacket = new DatagramPacket(receivedMessage, receivedMessage.length);
 				socket.receive(receivedPacket);
+				
 				String requestName = String.format("%d%d", System.currentTimeMillis(), random.nextLong(1000, 9999));
-				Runnable udpMsgHandler = new UDPMessageHandler(requestName, new String(receivedPacket.getData()),
-						socket, receivedPacket);
-
+				
+				Runnable udpMsgHandler = new UDPMessageHandler(requestName, socket, receivedPacket);
 				executorHandle.execute(udpMsgHandler);
 
 				logger.info(String.format("RECEIVED REQUEST #%s", requestName));

@@ -1,11 +1,11 @@
 package br.dev.ppaiva.gateway.server.types.enums;
 
-public enum UDPDataMethod {
-	RECEIVE("RECEIVE"), DELIVER("DELIVER");
+public enum DataMethod {
+	GET("GET"), POST("POST");
 
 	private String method;
 
-	private UDPDataMethod(String method) {
+	private DataMethod(String method) {
 		this.method = method;
 	}
 
@@ -13,8 +13,8 @@ public enum UDPDataMethod {
 		return method;
 	}
 
-	public UDPDataMethod from(String method) {
-		for (UDPDataMethod m : UDPDataMethod.values()) {
+	public DataMethod from(String method) {
+		for (DataMethod m : DataMethod.values()) {
 			if (m.getMethod().equals(method)) {
 				return m;
 			}
