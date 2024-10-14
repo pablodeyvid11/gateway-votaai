@@ -8,6 +8,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import br.dev.ppaiva.gateway.client.Client;
+import br.dev.ppaiva.gateway.client.HTTPClient;
+import br.dev.ppaiva.gateway.client.TCPClient;
 import br.dev.ppaiva.gateway.client.UDPClient;
 import br.dev.ppaiva.gateway.heartbeat.types.VotaAIServer;
 import br.dev.ppaiva.gateway.server.handler.requests.Response;
@@ -55,8 +57,10 @@ public class HeartBeat {
 					client = new UDPClient();
 					break;
 				case TCP:
+					client = new TCPClient();
 					break;
 				case HTTP:
+					client = new HTTPClient();
 					break;
 				default:
 					break;

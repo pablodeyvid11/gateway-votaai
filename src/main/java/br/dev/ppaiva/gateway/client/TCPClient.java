@@ -1,9 +1,11 @@
 package br.dev.ppaiva.gateway.client;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import com.google.gson.Gson;
@@ -13,36 +15,37 @@ import br.dev.ppaiva.gateway.server.handler.requests.Response;
 import br.dev.ppaiva.gateway.server.types.enums.CodeResponse;
 import br.dev.ppaiva.gateway.server.types.enums.Status;
 
-public class UDPClient implements Client {
+public class TCPClient implements Client {
 
 	@Override
 	public Response<?> run(String method, String path, String body, VotaAIServer server) throws IOException {
 
-		DatagramSocket clientSocket = new DatagramSocket();
-		InetAddress inetAddress = InetAddress.getByName(server.getLocation());
+		Socket connection = new Socket(server.getLocation(), server.getPort());
+		connection.setSoTimeout(5000);
 
-		clientSocket.setSoTimeout(5000);
+		OutputStream output = connection.getOutputStream();
+		BufferedReader input = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 
 		StringBuilder sb = new StringBuilder();
 		sb.append(method);
 		sb.append(" ");
 		sb.append(path);
-		sb.append("\n");
+		sb.append("\n\n");
 		sb.append(body);
+		sb.append("\n\n");
 
-		byte[] sendMessage = sb.toString().getBytes();
-
-		DatagramPacket sendPacket = new DatagramPacket(sendMessage, sendMessage.length, inetAddress, server.getPort());
-		clientSocket.send(sendPacket);
-
-		byte[] receivedMessage = new byte[2048];
-
-		DatagramPacket receivePacket = new DatagramPacket(receivedMessage, receivedMessage.length);
+		output.write(sb.toString().getBytes(StandardCharsets.UTF_8));
+		output.flush();
 
 		try {
-			clientSocket.receive(receivePacket);
-			String receivedMessageString = new String(receivePacket.getData(), 0, receivePacket.getLength());
+			StringBuilder responseBuilder = new StringBuilder();
+			String line;
 
+			while ((line = input.readLine()) != null) {
+				responseBuilder.append(line).append("\n");
+			}
+
+			String receivedMessageString = responseBuilder.toString();
 			String[] tokens = tokenize(receivedMessageString);
 
 			String status = tokens[0];
@@ -54,12 +57,14 @@ public class UDPClient implements Client {
 			Response<?> responseData = new Response<>(CodeResponse.valueOf(status),
 					Status.valueOf(Integer.parseInt(code)), dataObject);
 
-			clientSocket.close();
 			return responseData;
+
 		} catch (Exception e) {
 			return new Response<>(CodeResponse.ERROR, Status.REQUEST_TIMEOUT, null);
 		} finally {
-			clientSocket.close();
+			output.close();
+			input.close();
+			connection.close();
 		}
 	}
 

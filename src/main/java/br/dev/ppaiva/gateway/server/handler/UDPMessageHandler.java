@@ -41,11 +41,10 @@ public final class UDPMessageHandler extends MessageHandler {
 
 			VotaAIServer votaAiServer = VotaAI.getAvailableServer();
 
-			logger.info(
-					"Intercepting packet... Sending to " + votaAiServer.getLocation() + ":" + votaAiServer.getPort());
+			logger.info("Intercepting packet... Sending to " + votaAiServer.getLocation() + ":" + votaAiServer.getPort());
 
 			Response<?> response = client.run(method, path, body, votaAiServer);
-			;
+			
 			Gson gson = new Gson();
 
 			String bodyResponse = gson.toJson(response).replace("\\u0000", "").trim();

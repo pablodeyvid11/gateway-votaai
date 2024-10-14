@@ -9,6 +9,10 @@ import java.util.Arrays;
 
 import com.google.gson.Gson;
 
+import br.dev.ppaiva.gateway.client.Client;
+import br.dev.ppaiva.gateway.client.TCPClient;
+import br.dev.ppaiva.gateway.heartbeat.VotaAI;
+import br.dev.ppaiva.gateway.heartbeat.types.VotaAIServer;
 import br.dev.ppaiva.gateway.server.handler.requests.Response;
 
 public final class TCPMessageHandler extends MessageHandler {
@@ -33,7 +37,7 @@ public final class TCPMessageHandler extends MessageHandler {
 
 			// lendo linha vazia
 			reader.readLine();
-			
+
 			while ((line = reader.readLine()) != null) {
 				if (line.equals("")) {
 					break;
@@ -47,7 +51,12 @@ public final class TCPMessageHandler extends MessageHandler {
 				String path = tokens[1];
 				String body = tokens[2];
 
-				Response<?> response = (Response<?>) requestDispatcher.dispatch(method, path, body);
+				Client client = new TCPClient();
+				VotaAIServer votaAiServer = VotaAI.getAvailableServer();
+				logger.info("Intercepting packet... Sending to " + votaAiServer.getLocation() + ":"
+						+ votaAiServer.getPort());
+
+				Response<?> response = client.run(method, path, body, votaAiServer);
 				Gson gson = new Gson();
 
 				String bodyResponse = gson.toJson(response).replace("\\u0000", "").trim();

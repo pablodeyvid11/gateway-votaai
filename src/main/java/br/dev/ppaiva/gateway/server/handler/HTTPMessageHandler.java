@@ -9,6 +9,11 @@ import java.util.StringTokenizer;
 
 import com.google.gson.Gson;
 
+import br.dev.ppaiva.gateway.client.Client;
+import br.dev.ppaiva.gateway.client.HTTPClient;
+import br.dev.ppaiva.gateway.client.TCPClient;
+import br.dev.ppaiva.gateway.heartbeat.VotaAI;
+import br.dev.ppaiva.gateway.heartbeat.types.VotaAIServer;
 import br.dev.ppaiva.gateway.server.handler.requests.Response;
 import br.dev.ppaiva.gateway.server.types.enums.Status;
 
@@ -67,7 +72,13 @@ public final class HTTPMessageHandler extends MessageHandler {
 
 			String body = data.toString();
 
-			Response<?> response = (Response<?>) requestDispatcher.dispatch(method, path, body);
+			Client client = new HTTPClient();
+			VotaAIServer votaAiServer = VotaAI.getAvailableServer();
+
+			logger.info(
+					"Intercepting packet... Sending to " + votaAiServer.getLocation() + ":" + votaAiServer.getPort());
+
+			Response<?> response = client.run(method, path, body, votaAiServer);
 			Gson gson = new Gson();
 
 			String bodyResponse = gson.toJson(response).replace("\\u0000", "").trim();

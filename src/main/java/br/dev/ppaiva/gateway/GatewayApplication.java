@@ -17,9 +17,9 @@ public class GatewayApplication {
 
 		VotaAI.servers.addAll(Arrays.asList(s1, s2, s3));
 
-		HeartBeat hb = new HeartBeat(ServerType.UDP);
+		HeartBeat hb = new HeartBeat(ServerType.HTTP);
 		hb.start();
 
-		ServerFactory.build(8080, ServerType.UDP).start();
+		ServerFactory.build(8080, ServerType.HTTP).start();
 	}
 }
