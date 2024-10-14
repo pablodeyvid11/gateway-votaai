@@ -12,10 +12,11 @@ public class GatewayApplication {
 	public static void main(String[] args) {
 
 		VotaAIServer s1 = new VotaAIServer("localhost", 9090, false);
-		VotaAIServer s2 = new VotaAIServer("localhost", 9091, false);
-		VotaAIServer s3 = new VotaAIServer("localhost", 9092, false);
+//		VotaAIServer s2 = new VotaAIServer("localhost", 9091, false);
+//		VotaAIServer s3 = new VotaAIServer("localhost", 9092, false);
 
-		VotaAI.servers.addAll(Arrays.asList(s1, s2, s3));
+		VotaAI.servers.addAll(Arrays.asList(s1 /** , s2, s3 **/
+		));
 
 		HeartBeat hb = new HeartBeat(ServerType.HTTP);
 		hb.start();

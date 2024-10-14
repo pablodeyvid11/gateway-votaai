@@ -11,9 +11,9 @@ import com.google.gson.Gson;
 
 import br.dev.ppaiva.gateway.client.Client;
 import br.dev.ppaiva.gateway.client.HTTPClient;
-import br.dev.ppaiva.gateway.client.TCPClient;
 import br.dev.ppaiva.gateway.heartbeat.VotaAI;
 import br.dev.ppaiva.gateway.heartbeat.types.VotaAIServer;
+import br.dev.ppaiva.gateway.idempotent.Idempotent;
 import br.dev.ppaiva.gateway.server.handler.requests.Response;
 import br.dev.ppaiva.gateway.server.types.enums.Status;
 
@@ -75,10 +75,18 @@ public final class HTTPMessageHandler extends MessageHandler {
 			Client client = new HTTPClient();
 			VotaAIServer votaAiServer = VotaAI.getAvailableServer();
 
-			logger.info(
-					"Intercepting packet... Sending to " + votaAiServer.getLocation() + ":" + votaAiServer.getPort());
+			Response<?> response;
 
-			Response<?> response = client.run(method, path, body, votaAiServer);
+			response = Idempotent.getSavedResponse(method, path, body);
+			if (response != null) {
+				logger.info("Package already processed... Redirecting back.");
+			} else {
+				logger.info("Intercepting packet... Sending to " + votaAiServer.getLocation() + ":"
+						+ votaAiServer.getPort());
+				response = client.run(method, path, body, votaAiServer);
+				Idempotent.saveRequest(method, path, body, response);
+			}
+
 			Gson gson = new Gson();
 
 			String bodyResponse = gson.toJson(response).replace("\\u0000", "").trim();

@@ -11,6 +11,7 @@ import br.dev.ppaiva.gateway.client.Client;
 import br.dev.ppaiva.gateway.client.UDPClient;
 import br.dev.ppaiva.gateway.heartbeat.VotaAI;
 import br.dev.ppaiva.gateway.heartbeat.types.VotaAIServer;
+import br.dev.ppaiva.gateway.idempotent.Idempotent;
 import br.dev.ppaiva.gateway.server.handler.requests.Response;
 
 public final class UDPMessageHandler extends MessageHandler {
@@ -35,16 +36,24 @@ public final class UDPMessageHandler extends MessageHandler {
 		String path = tokens[1];
 		String body = tokens[2];
 
+		
 		DatagramPacket datagramResponse = null;
 		try {
 			Client client = new UDPClient();
 
 			VotaAIServer votaAiServer = VotaAI.getAvailableServer();
-
-			logger.info("Intercepting packet... Sending to " + votaAiServer.getLocation() + ":" + votaAiServer.getPort());
-
-			Response<?> response = client.run(method, path, body, votaAiServer);
 			
+			Response<?> response;
+			
+			response = Idempotent.getSavedResponse(method, path, body);
+			if(response != null) {
+				logger.info("Package already processed... Redirecting back.");
+			} else {
+				logger.info("Intercepting packet... Sending to " + votaAiServer.getLocation() + ":" + votaAiServer.getPort());
+				response = client.run(method, path, body, votaAiServer);
+				Idempotent.saveRequest(method, path, body, response);
+			}
+
 			Gson gson = new Gson();
 
 			String bodyResponse = gson.toJson(response).replace("\\u0000", "").trim();

@@ -41,7 +41,7 @@ public class HeartBeat {
 
 		public HeartBeatThread(VotaAIServer server) {
 			this.server = server;
-			this.interval = 5000L;
+			this.interval = 1000L;
 		}
 
 		@Override
@@ -73,22 +73,18 @@ public class HeartBeat {
 					e.printStackTrace();
 				}
 
-				if (returned.getCode().equals(CodeResponse.ERROR)) {
-					returned = null;
-				}
-
-				if (returned != null) {
-					server.setActive(true);
-					logger.info(String.format("%s:%d is healty", server.getLocation(), server.getPort()));
-					interval = 5000l;
-				} else {
+				if (returned == null || returned.getCode().equals(CodeResponse.ERROR)) {
 					server.setActive(false);
 					logger.info(String.format("%s:%d is down", server.getLocation(), server.getPort()));
-					if (interval >= 30000) {
-						interval = 5000l;
+					if (interval >= 3000L) {
+						interval = 1000l;
 					} else {
-						interval += 5000l;
+						interval += 1000l;
 					}
+				} else {
+					server.setActive(true);
+					logger.info(String.format("%s:%d is healty", server.getLocation(), server.getPort()));
+					interval = 1000L;
 				}
 
 				try {
